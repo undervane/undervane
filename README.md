@@ -1,4 +1,4 @@
-### Hi there 👋
+# <img src="wave.gif" width="28px" height="28px"> Hello, it's Sergio Márquez.
 
 <!--
 **undervane/undervane** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
