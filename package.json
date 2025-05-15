@@ -4,9 +4,12 @@
   "description": "My own personal brand webpage",
   "author": "Undervane",
   "private": true,
+  "engines": {
+    "node": "16.20.2"
+  },
   "scripts": {
     "dev": "nuxt",
-    "build": "nuxt build",
+    "build": "nuxt build", 
     "start": "nuxt start",
     "generate": "nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
