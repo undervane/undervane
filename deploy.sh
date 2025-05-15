@@ -19,7 +19,8 @@ git add -A
 git commit -m '✨ Latest version deploy'
 
 # deploy
-git push -f https://github.com/undervane/undervane.git deploy
+git remote add origin https://github.com/undervane/undervane.git
+git push -f origin HEAD:deploy
 
 # undo git init
 rm -rf .git
