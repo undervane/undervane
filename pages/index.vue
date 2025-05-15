@@ -35,7 +35,7 @@
           },
           {
             icon: ['fab', 'linkedin'],
-            url: 'https://www.linkedin.com/in/undervane/'
+            url: 'https://www.linkedin.com/in/mipigu/'
           },
           {
             icon: ['fab', 'github'],
