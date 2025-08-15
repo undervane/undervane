@@ -2,7 +2,7 @@
   <div>
     <LateralPanel :open="open" class="loadAnimation" @open="toggleChat" @close="toggleChat">
       <template v-slot:panel>
-        <Chatbox />
+        <Chatbox :isOpen="open" />
       </template>
 
       <template v-slot:content>
@@ -23,7 +23,7 @@
     components: {
       LightSwitch,
       LateralPanel,
-      Chatbox: () => import('@/components/Chatbox.vue'),
+      Chatbox: () => import('@/components/ChatN8N.vue'),
       Notification: () => import('@/components/Notification.vue')
     },
     computed: {
