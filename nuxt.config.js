@@ -113,6 +113,9 @@ export default {
       })
     }
   },
+  router: {
+    base: process.env.NODE_ENV === 'production' ? '/' : '/'
+  },
   generate: {
     routes: ['/blog/the-dots-pattern']
   },
