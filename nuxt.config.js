@@ -16,7 +16,13 @@ export default {
         content: process.env.npm_package_description || ''
       }
     ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    link: [
+      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      { 
+        rel: 'stylesheet', 
+        href: 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' 
+      }
+    ],
     script: [
       {
         src:
@@ -120,7 +126,7 @@ export default {
       'plugins/**/*.js'
     ],
     styleExtensions: ['.css', '.scss'],
-    whitelist: ['body', 'html', 'nuxt-progress'],
+    whitelist: ['body', 'html', 'nuxt-progress', 'font-sans', 'font-open-sans'],
     whitelistPatterns: [
       /-(leave|enter|appear)(|-(to|from|active))$/,
       /^(?!cursor-move).+-move$/,

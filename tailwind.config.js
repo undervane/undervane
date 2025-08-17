@@ -7,6 +7,10 @@
 module.exports = {
   theme: {
     extend: {
+      fontFamily: {
+        'sans': ['Open Sans', 'sans-serif'],
+        'open-sans': ['Open Sans', 'sans-serif']
+      },
       maxWidth: {
         '1-3': 'calc(100vw / 3 - 100px)',
         '1-2': 'calc(100vw / 2 - 120px)'
