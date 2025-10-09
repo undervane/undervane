@@ -9,11 +9,7 @@
       @buttonClick="toggleChat"
     >
       <p class="content">
-        I'm a software engineer working on human interaction. I think a quality
-        outcome not only depends on a single area but in a balanced coordination
-        of several factors. My intent is to slide through them all to get rid of
-        laggy experiences. Because first impressions are important, let's work
-        together to make them knowledgeable ✨
+        You can label me as an AI-First Software Engineer. Entrepreneur. Freelancer. Or all of the above. Problems is what I eat for breakfast, and ideas keep me in shape. After 10 years of technical experience, few things can resist me, but the ones that do, have my full attention. Is there anything that resists you? Write me and tell me what you have for breakfast ✨
       </p>
     </LandingCard>
     <Iceberg
@@ -98,13 +94,7 @@ export default {
         {
           hid: 'description',
           name: 'description',
-          content: `
-          I'm a software engineer working on human interaction. 
-        I think a quality outcome not only depends on a single 
-        area but in a balanced coordination of several factors. 
-        My intent is to slide through them all to get rid of laggy 
-        experiences. Because first impressions are important, 
-        let's work together to make them knowledgeable ✨`
+          content: `You can label me as an AI-First Software Engineer. Entrepreneur. Freelancer. Or all of the above. Problems is what I eat for breakfast, and ideas keep me in shape. After 10 years of technical experience, few things can resist me, but the ones that do, have my full attention. Is there anything that resists you? Write me and tell me what you have for breakfast ✨`
         }
       ]
     }
