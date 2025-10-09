@@ -10,55 +10,63 @@
         :r="ripple.radius"
       />
     </svg>
-    <slot />
+    <div class="content-layer" v-zIndex="zIndex + 1">
+      <slot />
+    </div>
   </div>
 </template>
 
-<script>
-  export default {
-    props: {
-      dark: Boolean,
-      position: Object,
-      zIndex: {
-        type: Number,
-        default: () => -1
-      }
-    },
-    data() {
-      return {
-        ripple: { radius: 30 },
-        animation: null
-      }
-    },
-    watch: {
-      dark() {
-        this.animation ? this.animation.restart() : this.playAnimation()
-      }
-    },
-    directives: {
-      zIndex: {
-        inserted: function(el, { value }) {
-          el.style.zIndex = value
-        }
-      }
-    },
-    methods: {
-      playAnimation() {
-        const html = document.getElementsByTagName('html')[0]
-        const rippleSize =
-          html.clientWidth < html.clientHeight
-            ? html.clientHeight * 2
-            : html.clientWidth * 2
+<script setup>
+import { ref, watch, onMounted } from 'vue'
 
-        this.animation = this.$anime.timeline().add({
-          targets: this.ripple,
-          duration: 2000,
-          radius: rippleSize,
-          easing: 'cubicBezier(.5,0,.5,1)'
-        })
-      }
-    }
+const props = defineProps({
+  dark: Boolean,
+  position: Object,
+  zIndex: {
+    type: Number,
+    default: () => -1
   }
+})
+
+const ripple = ref({ radius: 30 })
+const animation = ref(null)
+
+// Custom directive for z-index
+const vZIndex = {
+  mounted: (el, binding) => {
+    el.style.zIndex = binding.value
+  }
+}
+
+const playAnimation = () => {
+  const html = document.getElementsByTagName('html')[0]
+  const rippleSize =
+    html.clientWidth < html.clientHeight
+      ? html.clientHeight * 2
+      : html.clientWidth * 2
+
+  // Access anime through global properties
+  const anime = window.$anime || window.$anime
+  if (anime) {
+    animation.value = anime.timeline().add({
+      targets: ripple.value,
+      duration: 2000,
+      radius: rippleSize,
+      easing: 'cubicBezier(.5,0,.5,1)'
+    })
+  }
+}
+
+watch(() => props.dark, () => {
+  animation.value ? animation.value.restart() : playAnimation()
+})
+
+onMounted(() => {
+  // Make anime available globally
+  if (typeof window !== 'undefined') {
+    window.$anime = window.$anime || window.$anime
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -69,6 +77,10 @@
 
   .ripple-layer {
     @apply absolute h-full w-full min-h-screen;
+  }
+
+  .content-layer {
+    @apply relative h-full w-full;
   }
 
   .ripple {

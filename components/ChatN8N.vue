@@ -7,7 +7,7 @@
           aria-label="close chat"
           @click="closeChat"
         >
-          <Icon icon="arrow-right" class="h-full" />
+          <Icon :icon="faArrowRight" class="h-full" />
         </button>
       </div>
       <div
@@ -56,19 +56,19 @@
           </div>
           
           <div
-            v-if="$refs.form"
+            v-if="form"
             key="last"
             class="md:hidden"
-            :style="{ height: `${$refs.form.clientHeight + 10}px` }"
+            :style="{ height: `${form.clientHeight + 10}px` }"
           ></div>
         </transition-group>
       </div>
-                      <!-- AI Chat Banner -->
-                      <div
+      <!-- AI Chat Banner -->
+      <div
         class="bg-blue-100 border-b border-blue-300 px-4 py-3 text-sm text-blue-800 mx-5 mt-2 rounded"
       >
         <div class="flex items-center">
-          <Icon icon="exclamation-circle" class="mr-2 text-blue-600" />
+          <Icon :icon="faExclamationCircle" class="mr-2 text-blue-600" />
           <span>
             <strong>AI-Powered Chat:</strong> I do not have control over the responses, they might not represent my personal opinions.
           </span>
@@ -96,7 +96,7 @@
             :disabled="sending || !newMessage.trim()"
             @click.prevent="sendMessage"
           >
-            <Icon :spin="sending" :icon="sending ? 'cog' : 'paper-plane'" />
+            <Icon :spin="sending" :icon="sending ? faCog : faPaperPlane" />
           </button>
         </div>
       </form>
@@ -104,361 +104,259 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Icon from '@/components/Icon.vue'
+import { faArrowRight, faExclamationCircle, faPaperPlane, faCog } from '@fortawesome/free-solid-svg-icons'
 
-export default {
-  name: 'ChatN8N',
-  props: {
-    isOpen: {
-      type: Boolean,
-      default: false
+const props = defineProps({
+  isOpen: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['close'])
+
+// Reactive data
+const messages = ref([])
+const newMessage = ref('')
+const sessionId = ref(Math.floor(Math.random() * 1000000))
+const sending = ref(false)
+const hasAskedInitialQuestion = ref(false)
+const isFirstTimeOpening = ref(true)
+const messagesContainer = ref(null)
+const form = ref(null)
+
+// Methods
+const loadMessages = () => {
+  try {
+    const savedMessages = sessionStorage.getItem('chatMessages')
+    if (savedMessages) {
+      messages.value = JSON.parse(savedMessages)
     }
-  },
-  components: {
-    Icon
-  },
-  data() {
-    return {
-      messages: [],
-      newMessage: '',
-      sessionId: Math.floor(Math.random() * 1000000),
-      sending: false,
-      hasAskedInitialQuestion: false,
-      isFirstTimeOpening: true
+
+    const hasAskedBefore = sessionStorage.getItem('hasAskedInitialQuestion')
+    if (hasAskedBefore === 'true') {
+      hasAskedInitialQuestion.value = true
     }
-  },
-  methods: {
-    loadMessages() {
-      try {
-        const savedMessages = sessionStorage.getItem('chatMessages')
-        if (savedMessages) {
-          this.messages = JSON.parse(savedMessages)
-        }
 
-        const hasAskedBefore = sessionStorage.getItem('hasAskedInitialQuestion')
-        if (hasAskedBefore === 'true') {
-          this.hasAskedInitialQuestion = true
-        }
+    const savedSessionId = sessionStorage.getItem('chatSessionId')
+    if (savedSessionId) {
+      sessionId.value = parseInt(savedSessionId)
+    }
+  } catch (error) {
+    console.error('Error loading messages:', error)
+  }
+}
 
-        const savedSessionId = sessionStorage.getItem('chatSessionId')
-        if (savedSessionId) {
-          this.sessionId = parseInt(savedSessionId)
-        }
-      } catch (error) {
-        console.error('Error loading messages:', error)
+const saveMessages = () => {
+  try {
+    sessionStorage.setItem('chatMessages', JSON.stringify(messages.value))
+    sessionStorage.setItem(
+      'hasAskedInitialQuestion',
+      hasAskedInitialQuestion.value.toString()
+    )
+    sessionStorage.setItem('chatSessionId', sessionId.value.toString())
+  } catch (error) {
+    console.error('Error saving messages:', error)
+  }
+}
+
+const clearSessionData = () => {
+  try {
+    sessionStorage.removeItem('chatMessages')
+    sessionStorage.removeItem('hasAskedInitialQuestion')
+    sessionStorage.removeItem('chatSessionId')
+  } catch (error) {
+    console.error('Error clearing session data:', error)
+  }
+}
+
+const isEmoji = (text, maxLength = 3) => {
+  return text.length <= maxLength && /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(text)
+}
+
+const closeChat = () => {
+  emit('close')
+}
+
+const askInitialQuestion = async () => {
+  if (hasAskedInitialQuestion.value) return
+
+  const initialMessage = "Hey! I'm Sergio's AI assistant. How can I help you today?"
+  
+  messages.value.push({
+    type: 'assistant',
+    text: initialMessage,
+    time: new Date().toLocaleTimeString()
+  })
+
+  hasAskedInitialQuestion.value = true
+  saveMessages()
+}
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim() || sending.value) return
+
+  const userMessage = newMessage.value.trim()
+  newMessage.value = ''
+
+  // Add user message
+  messages.value.push({
+    type: 'user',
+    text: userMessage,
+    time: new Date().toLocaleTimeString()
+  })
+
+  sending.value = true
+
+  try {
+    // Add artificial delay to make the interaction feel more natural
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1500 + Math.random() * 1000)
+    )
+
+    // Send to n8n webhook
+    const response = await fetch(
+      'https://n8n.mipigu.com/webhook/b3729be4-dd16-4bfd-bf61-f50f9caa406f/chat',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chatInput: userMessage,
+          sessionId: sessionId.value,
+          timestamp: new Date().toISOString()
+        })
       }
-    },
+    )
 
-    saveMessages() {
-      try {
-        sessionStorage.setItem('chatMessages', JSON.stringify(this.messages))
-        sessionStorage.setItem(
-          'hasAskedInitialQuestion',
-          this.hasAskedInitialQuestion.toString()
-        )
-        sessionStorage.setItem('chatSessionId', this.sessionId.toString())
-      } catch (error) {
-        console.error('Error saving messages:', error)
-      }
-    },
-
-    clearSessionData() {
-      try {
-        sessionStorage.removeItem('chatMessages')
-        sessionStorage.removeItem('hasAskedInitialQuestion')
-        sessionStorage.removeItem('chatSessionId')
-      } catch (error) {
-        console.error('Error clearing session data:', error)
-      }
-    },
-    
-    async sendMessage() {
-      if (!this.newMessage.trim() || this.sending) return
-
-      const userMessage = this.newMessage.trim()
-      this.newMessage = ''
-
-      // Add user message
-      this.messages.push({
-        type: 'user',
-        text: userMessage,
+    if (response.ok) {
+      const data = await response.json()
+      // Add bot response
+      messages.value.push({
+        type: 'bot',
+        text:
+          data.output ||
+          "Thanks for your message! I'll get back to you soon.",
         time: new Date().toLocaleTimeString()
       })
-
-      this.sending = true
-
-      try {
-        // Add artificial delay to make the interaction feel more natural
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1500 + Math.random() * 1000)
-        )
-
-        // Send to n8n webhook
-        const response = await fetch(
-          'https://n8n.mipigu.com/webhook/b3729be4-dd16-4bfd-bf61-f50f9caa406f/chat',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              chatInput: userMessage,
-              sessionId: this.sessionId,
-              timestamp: new Date().toISOString()
-            })
-          }
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          // Add bot response
-          this.messages.push({
-            type: 'bot',
-            text:
-              data.output ||
-              "Thanks for your message! I'll get back to you soon.",
-            time: new Date().toLocaleTimeString()
-          })
-        } else {
-          throw new Error('Failed to send message')
-        }
-      } catch (error) {
-        console.error('Error sending message:', error)
-        this.messages.push({
-          type: 'bot',
-          text:
-            "Sorry, I'm having trouble connecting right now. Please try again later.",
-          time: new Date().toLocaleTimeString()
-        })
-      } finally {
-        this.sending = false
-        this.saveMessages()
-        this.$nextTick(() => {
-          this.scrollToBottom()
-        })
-      }
-    },
-    scrollToBottom() {
-      const container = this.$refs.messagesContainer
-      if (container) {
-        // Use smooth scrolling for better UX
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    },
-    closeChat() {
-      // Emit close event to parent component
-      this.$emit('close')
-    },
-    isEmoji(value, max = 3) {
-      if (typeof value !== 'string') {
-        return false
-      }
-
-      const regex = /^(?:[\u2700-\u27BF]|(?:\uD83C[\uDDE6-\uDDFF]){2}|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u0023-\u0039]\uFE0F?\u20E3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff]){1,3}$/g
-
-      return !!value.match(regex)
-    },
-    askInitialQuestion() {
-      if (!this.hasAskedInitialQuestion) {
-        this.hasAskedInitialQuestion = true
-        this.saveMessages()
-        // Automatically send a question on behalf of the user
-        this.autoSendMessage("The user has just opened the chat, please introduce yourself in a gracious manner and ask about their name")
-      }
-    },
-    autoSendMessage(message) {
-      this.sending = true
-
-      // Send to n8n webhook without artificial delay for initial question
-      this.sendToWebhook(message)
-      
-      // Scroll to bottom after adding message
-      this.$nextTick(() => {
-        this.scrollToBottom()
-      })
-    },
-    async sendToWebhook(userMessage) {
-      try {
-        const response = await fetch(
-          'https://n8n.mipigu.com/webhook/b3729be4-dd16-4bfd-bf61-f50f9caa406f/chat',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              chatInput: userMessage,
-              sessionId: this.sessionId,
-              timestamp: new Date().toISOString()
-            })
-          }
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          // Add bot response
-          this.messages.push({
-            type: 'bot',
-            text:
-              data.output ||
-              "Thanks for your message! I'll get back to you soon.",
-            time: new Date().toLocaleTimeString()
-          })
-        } else {
-          throw new Error('Failed to send message')
-        }
-      } catch (error) {
-        console.error('Error sending message:', error)
-        this.messages.push({
-          type: 'bot',
-          text:
-            "Sorry, I'm having trouble connecting right now. Please try again later.",
-          time: new Date().toLocaleTimeString()
-        })
-      } finally {
-        this.sending = false
-        this.saveMessages()
-        this.$nextTick(() => {
-          this.scrollToBottom()
-        })
-      }
+    } else {
+      throw new Error('Failed to send message')
     }
-  },
-  watch: {
-    messages: {
-      handler() {
-        this.$nextTick(() => {
-          this.scrollToBottom()
-        })
-      },
-      deep: true
-    },
-    isOpen(newVal, oldVal) {
-      // Only send initial message when chat is opened (not when it's closed)
-      if (newVal && !oldVal) {
-        console.log('Chat opened - checking for initial question')
-        this.loadMessages()
-        this.askInitialQuestion()
-      }
-    }
-  },
-  
-  mounted() {
-    console.log('ChatN8N component mounted')
-    // Load messages on mount but don't send initial question yet
-    this.loadMessages()
-    
-    // Add event listener to clear data when page is being unloaded
-    window.addEventListener('beforeunload', this.clearSessionData)
-  },
-  
-  beforeDestroy() {
-    // Remove event listener and clear session data when component is destroyed
-    window.removeEventListener('beforeunload', this.clearSessionData)
-    this.clearSessionData()
+  } catch (error) {
+    console.error('Error sending message:', error)
+    messages.value.push({
+      type: 'bot',
+      text:
+        "Sorry, I'm having trouble connecting right now. Please try again later.",
+      time: new Date().toLocaleTimeString()
+    })
+  } finally {
+    sending.value = false
+    saveMessages()
+    nextTick(() => {
+      scrollToBottom()
+    })
   }
+}
+
+const scrollToBottom = () => {
+  const container = messagesContainer.value
+  if (container) {
+    // Use smooth scrolling for better UX
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    })
+  }
+}
+
+// Watch for isOpen changes
+watch(() => props.isOpen, (newValue) => {
+  if (newValue && isFirstTimeOpening.value) {
+    loadMessages()
+    askInitialQuestion()
+    isFirstTimeOpening.value = false
+  }
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  if (props.isOpen) {
+    loadMessages()
+    askInitialQuestion()
+    isFirstTimeOpening.value = false
+  }
+})
+
+onBeforeUnmount(() => {
+  clearSessionData()
+})
+
+// Clear session data on page unload
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', clearSessionData)
 }
 </script>
 
-<style lang="scss">
-.remove-scrollbar::-webkit-scrollbar {
-  width: 0px; /* remove scrollbar space */
-  height: 0px; /* remove scrollbar space */
-  background: transparent; /* optional: just make scrollbar invisible */
-}
-</style>
-
 <style lang="scss" scoped>
-.bg-chat {
-  background: $blue-darker;
-}
-
-.bg-message {
-  background-color: azure;
-}
-
-.form-bg {
-  background: $blue-darker;
-}
-
-.bg-green-light {
-  background: $green-light;
-}
-
-.dot {
-  width: 11px;
-  height: 8px;
-  margin-left: 10px;
-  margin-top: 2px;
-  @apply rounded-full;
-}
-
-.send-button {
-  background-color: $blue;
-  @apply mr-px px-3 flex-shrink-0 text-white rounded-full;
+.chat-item {
+  animation: slideIn 0.3s ease-out;
 }
 
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.8s;
-}
-.list-enter:not(.justify-end), .list-leave-to:not(.justify-end) {
-  opacity: 0;
-  transform: translateX(-30px);
-}
-.list-enter.justify-end, .list-leave-to.justify-end {
-  opacity: 0;
-  transform: translateX(30px);
+  transition: all 0.3s ease;
 }
 
-#scroller * {
-  /* don't allow the children of the scrollable element to be selected as an anchor node */
-  overflow-anchor: none;
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
 }
 
-/* Typing indicator with bouncing dots */
 .typing-dots {
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 5px 0;
 }
 
-.typing-dots .dot {
+.dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: $blue;
-  animation: bounce 1.4s infinite ease-in-out;
-  margin: 0;
+  background-color: #666;
+  animation: bounce 1.4s infinite ease-in-out both;
 }
 
-.typing-dots .dot:nth-child(1) {
+.dot:nth-child(1) {
   animation-delay: -0.32s;
 }
 
-.typing-dots .dot:nth-child(2) {
+.dot:nth-child(2) {
   animation-delay: -0.16s;
 }
 
-.typing-dots .dot:nth-child(3) {
-  animation-delay: 0s;
-}
-
 @keyframes bounce {
-  0%,
-  80%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.5;
+  0%, 80%, 100% {
+    transform: scale(0);
   }
   40% {
     transform: scale(1);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

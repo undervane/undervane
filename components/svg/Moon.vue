@@ -31,12 +31,10 @@
   </svg>
 </template>
 
-<script>
-  export default {
-    props: {
-      dark: Boolean
-    }
-  }
+<script setup>
+defineProps({
+  dark: Boolean
+})
 </script>
 
 <style lang="scss" scoped>

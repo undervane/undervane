@@ -1,4 +1,6 @@
-import Vue from 'vue'
-import VueAnime from 'vue-animejs'
+import anime from 'animejs'
 
-Vue.use(VueAnime)
+export default defineNuxtPlugin((nuxtApp) => {
+  // Provide anime.js to Vue 2 components
+  nuxtApp.vueApp.config.globalProperties.$anime = anime
+})

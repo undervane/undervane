@@ -41,12 +41,12 @@
   </svg>
 </template>
 
-<script>
-  export default {
-    props: {
-      dark: Boolean
-    }
-  }
+<script setup>
+defineProps({
+  dark: Boolean
+})
+
+defineEmits(['click'])
 </script>
 
 <style lang="scss" scoped>

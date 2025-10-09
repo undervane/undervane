@@ -1,51 +1,56 @@
 <template>
-  <div>
-    <h1 class="title" :class="{'text-white': dark}">{{title}}</h1>
-    <div class="xs-reverse">
-      <p v-if="text" class="content">{{ text }}</p>
-      <slot v-else></slot>
-      <Button
-        @click="$emit('buttonClick')"
-        class="button"
-        :color="dark ? 'transition-dark' : 'transition'"
-      >{{buttonText}}</Button>
-      <div class="links">
-        <Icon
-          v-for="(link, index) in links"
-          class="icon"
-          :key="index"
-          :icon="link.icon"
-          theme="secondary"
-          :link="link.url"
-          @click.native="link.callback && link.callback(link)"
-        />
-      </div>
-    </div>
+  <div style="border: 3px solid green; background: yellow; padding: 20px;">
+    <h1>LANDING CARD TEST - CAN YOU SEE THIS?</h1>
+    <h1>{{title}}</h1>
+    <p>{{ text || 'No text provided' }}</p>
+    <button 
+      style="background: red; color: white; padding: 10px; margin: 10px;"
+      @click="testClick"
+    >
+      SIMPLE TEST BUTTON
+    </button>
+    <button 
+      style="background: blue; color: white; padding: 10px; margin: 10px;"
+      @click="handleButtonClick"
+    >
+      {{buttonText}}
+    </button>
   </div>
 </template>
 
-<script>
-  import Button from '@/components/Button.vue'
-  import Icon from '@/components/Icon.vue'
-  export default {
-    components: {
-      Button,
-      Icon
-    },
-    props: {
-      dark: Boolean,
-      title: String,
-      text: String,
-      buttonText: String,
-      links: Array
-    }
-  }
+<script setup>
+const props = defineProps({
+  dark: Boolean,
+  title: String,
+  text: String,
+  buttonText: String,
+  links: Array
+})
+
+const emit = defineEmits(['buttonClick'])
+
+const testClick = () => {
+  alert('SIMPLE TEST BUTTON CLICKED!')
+  console.log('Simple test button clicked')
+}
+
+const handleButtonClick = () => {
+  alert('MAIN BUTTON CLICKED!')
+  console.log('Main button clicked')
+  emit('buttonClick')
+}
+
+console.log('LandingCard script loaded')
 </script>
 
 <style lang="scss" scoped>
+  .landing-card-container {
+    @apply relative z-20;
+  }
+
   .title {
     transition: color 2s;
-    @apply mb-2;
+    @apply mb-2 relative z-10;
 
     @include breakpoint(xs) {
       @apply text-center mb-6;

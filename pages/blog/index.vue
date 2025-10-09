@@ -11,30 +11,26 @@
   </div>
 </template>
 
-<script>
-  import BlogCard from '@/components/BlogCard.vue'
-  import BlogNavigation from '@/components/BlogNavigation.vue'
-  export default {
-    components: {
-      BlogCard,
-      BlogNavigation
-    },
-    computed: {
-      dark() {
-        return this.$store.state.light.dark
-      }
-    },
-    head() {
-      return {
-        title: 'Sergio Márquez | Blog',
-        meta: [
-          {
-            hid: 'description',
-            name: 'description',
-            content: `I'm a Backend Engineer working on human interaction. I think a quality product or service depends not only on one area but in a bunch of them. My intent is to be able to explore them all and get rid of laggy experiences.`
-          }
-        ]
-      }
+<script setup>
+import { computed } from 'vue'
+import { useStore } from '~/store'
+import BlogCard from '@/components/BlogCard.vue'
+import BlogNavigation from '@/components/BlogNavigation.vue'
+
+// Store
+const store = useStore()
+
+// Computed properties
+const dark = computed(() => store.light.dark)
+
+// Head configuration
+useHead({
+  title: 'Sergio Márquez | Blog',
+  meta: [
+    {
+      name: 'description',
+      content: `I'm a Backend Engineer working on human interaction. I think a quality product or service depends not only on one area but in a bunch of them. My intent is to be able to explore them all and get rid of laggy experiences.`
     }
-  }
+  ]
+})
 </script>

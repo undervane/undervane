@@ -14,9 +14,9 @@
       <slot name="panel"></slot>
     </div>
     <div
-      class="transition"
+      class="content-area transition"
       :class="{'open': open, 'dragging': dragging}"
-      :style="{transform: open ? `translateX(${position}px)` : ''}"
+      :style="{transform: open ? `translateX(${position}px)` : 'translateX(0)'}"
     >
       <div
         @mousedown="startDrag"
@@ -33,61 +33,61 @@
     </div>
   </div>
 </template>
-<script>
-  export default {
-    props: {
-      open: Boolean
-    },
-    data() {
-      return {
-        clicked: false,
-        dragging: false,
-        position: 350,
-        indicatorTop: 0
-      }
-    },
-    watch: {
-      open() {
-        if (!this.open) {
-          this.position = 350
-        }
-      }
-    },
-    methods: {
-      startDrag() {
-        this.clicked = true
-      },
-      updateDrag({ clientX }) {
-        if (this.clicked) {
-          this.dragging = true
-        }
-        if (this.dragging) {
-          if (!this.open) {
-            this.$emit('open')
-          }
-          this.position =
-            clientX < 500
-              ? 250 < clientX && clientX < 300
-                ? 300
-                : clientX - 5
-              : 500
-        }
-      },
-      endDrag() {
-        if (this.clicked && !this.dragging) {
-          this.open ? this.$emit('close') : this.$emit('open')
-        }
-        if (this.open && this.position < 250) {
-          this.$emit('close')
-        }
-        this.clicked = false
-        this.dragging = false
-      },
-      updateIndicator({ clientY }) {
-        this.indicatorTop = clientY - 25
-      }
-    }
+<script setup>
+import { ref, watch } from 'vue'
+
+const props = defineProps({
+  open: Boolean
+})
+
+const emit = defineEmits(['open', 'close'])
+
+const clicked = ref(false)
+const dragging = ref(false)
+const position = ref(350)
+const indicatorTop = ref(0)
+
+watch(() => props.open, (newValue) => {
+  if (!newValue) {
+    position.value = 350
   }
+})
+
+const startDrag = () => {
+  clicked.value = true
+}
+
+const updateDrag = ({ clientX }) => {
+  if (clicked.value) {
+    dragging.value = true
+  }
+  if (dragging.value) {
+    if (!props.open) {
+      emit('open')
+    }
+    position.value =
+      clientX < 500
+        ? 250 < clientX && clientX < 300
+          ? 300
+          : clientX - 5
+        : 500
+  }
+}
+
+const endDrag = () => {
+  if (clicked.value && !dragging.value) {
+    props.open ? emit('close') : emit('open')
+  }
+  if (props.open && position.value < 250) {
+    emit('close')
+  }
+  clicked.value = false
+  dragging.value = false
+}
+
+const updateIndicator = ({ clientY }) => {
+  indicatorTop.value = clientY - 25
+}
 </script>
 <style lang="scss" scoped>
   .transition {
@@ -135,11 +135,20 @@
     min-height: 100vh;
     min-width: 300px;
     max-width: 500px;
+    z-index: 1000;
+    background-color: white;
+    left: 0;
+    top: 0;
 
     @include breakpoint(xs) {
       width: 100vw !important;
       max-width: 100vw !important;
     }
+  }
+
+  .content-area {
+    width: 100%;
+    min-height: 100vh;
   }
 
   .closed {

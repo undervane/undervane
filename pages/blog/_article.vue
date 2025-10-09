@@ -27,57 +27,58 @@
   </div>
 </template>
 
-<script>
-  import BlogNavigation from '@/components/BlogNavigation.vue'
-  import BlogImage from '@/components/BlogImage.vue'
-  import BlogContent from '@/components/BlogContent.vue'
+<script setup>
+import { computed } from 'vue'
+import { useStore } from '~/store'
+import BlogNavigation from '@/components/BlogNavigation.vue'
+import BlogImage from '@/components/BlogImage.vue'
+import BlogContent from '@/components/BlogContent.vue'
 
-  export default {
-    components: {
-      BlogNavigation,
-      BlogImage,
-      BlogContent
-    },
-    computed: {
-      dark() {
-        return this.$store.state.light.dark
-      }
-    },
-    async asyncData({ app, params, redirect }) {
-      try {
-        const fileContent = await import(`@/blog/${params.article}.md`)
-        const attr = fileContent.attributes
+// Store
+const store = useStore()
 
-        return {
-          name: params.slug,
-          title: attr.title,
-          trans: attr.trans,
-          year: attr.year,
-          id: attr.id,
-          owner: attr.owner,
-          colors: attr.colors,
-          role: attr.role,
-          cardAlt: attr.cardAlt,
-          noMainImage: attr.noMainImage,
-          description: attr.description,
-          related: attr.related,
-          extraComponent: attr.extraComponent,
-          renderFunc: fileContent.vue.render,
-          staticRenderFns: fileContent.vue.staticRenderFns,
-          image: {
-            url: attr.image && attr.image.url,
-            alt: attr.image && attr.image.alt,
-            author: attr.image && attr.image.author
-          }
-        }
-      } catch (e) {
-        redirect('/blog')
-      }
-    },
-    head() {
-      return {
-        title: `${this.title} | Blog`
+// Computed properties
+const dark = computed(() => store.light.dark)
+
+// Page data
+const route = useRoute()
+const router = useRouter()
+
+const { data: pageData } = await useAsyncData('article', async () => {
+  try {
+    const fileContent = await import(`@/blog/${route.params.article}.md`)
+    const attr = fileContent.attributes
+
+    return {
+      name: route.params.slug,
+      title: attr.title,
+      trans: attr.trans,
+      year: attr.year,
+      id: attr.id,
+      owner: attr.owner,
+      colors: attr.colors,
+      role: attr.role,
+      cardAlt: attr.cardAlt,
+      noMainImage: attr.noMainImage,
+      description: attr.description,
+      related: attr.related,
+      extraComponent: attr.extraComponent,
+      renderFunc: fileContent.vue.render,
+      staticRenderFns: fileContent.vue.staticRenderFns,
+      image: {
+        url: attr.image && attr.image.url,
+        alt: attr.image && attr.image.alt,
+        author: attr.image && attr.image.author
       }
     }
+  } catch (e) {
+    await router.push('/blog')
+    return null
   }
+})
+
+// Head configuration
+useHead({
+  title: computed(() => `${pageData.value?.title || ''} | Blog`)
+})
 </script>

@@ -9,87 +9,83 @@
   </div>
 </template>
 
-<script>
-  import Icon from '@/components/Icon.vue'
-  export default {
-    components: {
-      Icon
-    },
-    props: {
-      notification: {
-        type: Object,
-        default: null
-      },
-      fadeCountdown: {
-        type: Number,
-        default: 4000
-      }
-    },
-    data() {
-      return {
-        visible: false,
-        fadeTimeout: null
-      }
-    },
-    computed: {
-      getColorByStatus() {
-        switch (this.notification.status) {
-          case 'info':
-            return 'bg-blue-light'
-          case 'error':
-            return 'bg-red-light'
-          case 'success':
-            return 'bg-green-light'
-          default:
-            return 'bg-blue-light'
-        }
-      },
-      getIconByStatus() {
-        if (this.notification.icon) {
-          return this.notification.icon
-        }
+<script setup>
+import { ref, computed, watch } from 'vue'
+import Icon from '@/components/Icon.vue'
 
-        switch (this.notification.status) {
-          case 'info':
-            return 'info-circle'
-          case 'error':
-            return 'exclamation-circle'
-          case 'success':
-            return 'check'
-          default:
-            return 'info-circle'
-        }
-      }
-    },
-    watch: {
-      notification() {
-        if (this.notification) {
-          this.resetTimeout()
-        }
-      }
-    },
-    methods: {
-      onClick() {
-        if (this.notification.callback) {
-          this.notification.callback()
-        }
-
-        this.visible = false
-      },
-      resetTimeout() {
-        this.visible = true
-
-        if (this.fadeTimeout) {
-          clearTimeout(this.fadeTimeout)
-        }
-
-        this.fadeTimeout = setTimeout(
-          () => (this.visible = false),
-          this.notification.duration || this.fadeCountdown
-        )
-      }
-    }
+const props = defineProps({
+  notification: {
+    type: Object,
+    default: null
+  },
+  fadeCountdown: {
+    type: Number,
+    default: 4000
   }
+})
+
+const visible = ref(false)
+const fadeTimeout = ref(null)
+
+const getColorByStatus = computed(() => {
+  if (!props.notification) return 'bg-blue-light'
+  
+  switch (props.notification.status) {
+    case 'info':
+      return 'bg-blue-light'
+    case 'error':
+      return 'bg-red-light'
+    case 'success':
+      return 'bg-green-light'
+    default:
+      return 'bg-blue-light'
+  }
+})
+
+const getIconByStatus = computed(() => {
+  if (!props.notification) return 'info-circle'
+  
+  if (props.notification.icon) {
+    return props.notification.icon
+  }
+
+  switch (props.notification.status) {
+    case 'info':
+      return 'info-circle'
+    case 'error':
+      return 'exclamation-circle'
+    case 'success':
+      return 'check'
+    default:
+      return 'info-circle'
+  }
+})
+
+const onClick = () => {
+  if (props.notification?.callback) {
+    props.notification.callback()
+  }
+  visible.value = false
+}
+
+const resetTimeout = () => {
+  visible.value = true
+
+  if (fadeTimeout.value) {
+    clearTimeout(fadeTimeout.value)
+  }
+
+  fadeTimeout.value = setTimeout(
+    () => (visible.value = false),
+    props.notification?.duration || props.fadeCountdown
+  )
+}
+
+watch(() => props.notification, (newNotification) => {
+  if (newNotification) {
+    resetTimeout()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

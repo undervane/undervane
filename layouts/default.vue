@@ -1,54 +1,60 @@
 <template>
   <div>
     <LateralPanel :open="open" class="loadAnimation" @open="toggleChat" @close="toggleChat">
-      <template v-slot:panel>
+      <template #panel>
         <Chatbox :isOpen="open" />
       </template>
 
-      <template v-slot:content>
+      <template #content>
         <Notification :notification="notification" />
         <LightSwitch :dark="dark" :position="position">
-          <nuxt />
+          <NuxtPage />
         </LightSwitch>
       </template>
     </LateralPanel>
   </div>
 </template>
 
-<script>
-  import LightSwitch from '@/components/LightSwitch.vue'
-  import LateralPanel from '@/components/LateralPanel.vue'
+<script setup>
+import { computed, onMounted } from 'vue'
+import { useStore, useChatStore, useLightStore, useNotificationStore } from '~/store'
 
-  export default {
-    components: {
-      LightSwitch,
-      LateralPanel,
-      Chatbox: () => import('@/components/ChatN8N.vue'),
-      Notification: () => import('@/components/Notification.vue')
-    },
-    computed: {
-      dark() {
-        return this.$store.state.light.dark
-      },
-      position() {
-        return this.$store.state.light.position
-      },
-      open() {
-        return this.$store.state.chat.open
-      },
-      notification() {
-        return this.$store.state.notification.notification
-      }
-    },
-    mounted() {
-      this.$store.dispatch('light/calculate')
-    },
-    methods: {
-      toggleChat() {
-        this.$store.dispatch('chat/toggleChat')
-      }
-    }
-  }
+// Components
+const LightSwitch = defineAsyncComponent(() => import('~/components/LightSwitch.vue'))
+const LateralPanel = defineAsyncComponent(() => import('~/components/LateralPanel.vue'))
+const Chatbox = defineAsyncComponent(() => import('~/components/ChatN8N.vue'))
+const Notification = defineAsyncComponent(() => import('~/components/Notification.vue'))
+
+// Store
+const store = useStore()
+const chatStore = useChatStore()
+const lightStore = useLightStore()
+const notificationStore = useNotificationStore()
+
+// Debug store
+console.log('Layout - Store:', store)
+console.log('Layout - Chat store:', chatStore)
+console.log('Layout - Chat open state:', chatStore.open)
+
+// Computed properties
+const dark = computed(() => lightStore.dark)
+const position = computed(() => lightStore.position)
+const open = computed(() => {
+  console.log('Layout - Computing open state:', chatStore.open)
+  return chatStore.open
+})
+const notification = computed(() => notificationStore.notification)
+
+// Methods
+const toggleChat = () => {
+  console.log('Layout - Toggle chat called')
+  chatStore.toggleChat()
+}
+
+// Lifecycle
+onMounted(async () => {
+  await lightStore.calculate()
+})
 </script>
 
 <style lang="scss">

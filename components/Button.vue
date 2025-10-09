@@ -4,15 +4,15 @@
   </button>
 </template>
 
-<script>
-  export default {
-    props: {
-      color: {
-        type: String,
-        default: () => 'transition'
-      }
-    }
+<script setup>
+defineProps({
+  color: {
+    type: String,
+    default: () => 'transition'
   }
+})
+
+defineEmits(['click'])
 </script>
 
 <style lang="scss" scoped>
@@ -35,7 +35,7 @@
 
   .btn-transition-dark {
     &:hover {
-      box-shadow: 0 5px 20px lighten($dark, 30);
+      box-shadow: 0 5px 20px color.adjust($dark, $lightness: 30%);
       transform: scale(1.05);
     }
     @apply btn-transition;

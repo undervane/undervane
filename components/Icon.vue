@@ -1,5 +1,5 @@
 <template>
-  <nuxt-link v-if="to" :to="to" class="link" :class="theme">
+  <nuxt-link v-if="to" :to="to" class="link" :class="theme" @click="$emit('click')">
     <font-awesome-icon class="icon" :icon="icon" :spin="spin" />
   </nuxt-link>
   <a
@@ -10,27 +10,31 @@
     :href="link"
     rel="noopener"
     :aria-label="link"
+    @click="$emit('click')"
   >
     <font-awesome-icon class="icon" :icon="icon" :spin="spin" />
   </a>
-  <div v-else class="link" :class="theme">
+  <div v-else class="link" :class="theme" @click="$emit('click')">
     <font-awesome-icon class="icon" :icon="icon" :spin="spin" />
   </div>
 </template>
 
-<script>
-  export default {
-    props: {
-      icon: String | Array,
-      to: String,
-      link: {
-        type: String,
-        default: () => ''
-      },
-      spin: Boolean,
-      theme: String
-    }
-  }
+<script setup>
+defineProps({
+  icon: {
+    type: [String, Array, Object],
+    required: true
+  },
+  to: String,
+  link: {
+    type: String,
+    default: ''
+  },
+  spin: Boolean,
+  theme: String
+})
+
+defineEmits(['click'])
 </script>
 
 <style lang="scss" scoped>

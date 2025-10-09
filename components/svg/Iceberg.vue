@@ -316,17 +316,18 @@
   </svg>
 </template>
 
-<script>
-  export default {
-    components: {
-      Sun: () => import('./Sun.vue'),
-      Plane: () => import('./Plane.vue'),
-      Moon: () => import('./Moon.vue')
-    },
-    props: {
-      dark: Boolean
-    }
-  }
+<script setup>
+import { defineAsyncComponent } from 'vue'
+
+// Define props
+defineProps({
+  dark: Boolean
+})
+
+// Define async components
+const Sun = defineAsyncComponent(() => import('./Sun.vue'))
+const Plane = defineAsyncComponent(() => import('./Plane.vue'))
+const Moon = defineAsyncComponent(() => import('./Moon.vue'))
 </script>
 
 <style>
