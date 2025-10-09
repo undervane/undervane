@@ -89,7 +89,7 @@ export default {
   },
   head() {
     return {
-      title: 'Sergio Márquez | Engineer',
+      title: 'Sergio Márquez | AI-First Engineer',
       meta: [
         {
           hid: 'description',
