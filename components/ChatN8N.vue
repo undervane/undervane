@@ -19,7 +19,7 @@
         <transition-group name="list" tag="div" class="h-full">
           <div
             v-for="(message, index) in messages"
-            :key="`${index}-${message.text}`"
+            :key="index + '-' + message.text"
             class="chat-item w-full flex"
             :class="
               message.type === 'user'
@@ -59,18 +59,21 @@
             v-if="$refs.form"
             key="last"
             class="md:hidden"
-            :style="{ height: `${$refs.form.clientHeight + 10}px` }"
+            :style="{ height: getBottomSpacer() + 'px' }"
           ></div>
         </transition-group>
       </div>
-                      <!-- AI Chat Banner -->
-                      <div
-        class="bg-blue-100 border-b border-blue-300 px-4 py-3 text-sm text-blue-800 mx-5 mt-2 rounded"
+      <!-- AI Chat Banner fixed above input on mobile, inline in flow on desktop -->
+      <div
+        ref="banner"
+        key="ai-banner"
+        class="bg-blue-100 border border-blue-200 px-3 py-2 text-xs sm:text-sm text-blue-800 mx-4 md:mx-5 rounded"
+        :style="bannerFixedStyle"
       >
-        <div class="flex items-center">
-          <Icon icon="exclamation-circle" class="mr-2 text-blue-600" />
+        <div class="flex items-start">
+          <Icon icon="exclamation-circle" class="mr-3 text-blue-600 mt-0.5" />
           <span>
-            <strong>AI-Powered Chat:</strong> I do not have control over the responses, they might not represent my personal opinions.
+            <strong>AI-Powered Chat:</strong> Responses might not represent my personal opinions
           </span>
         </div>
       </div>
@@ -118,6 +121,22 @@ export default {
   components: {
     Icon
   },
+  computed: {
+    bannerFixedStyle() {
+      if (this.isMobile && this.$refs && this.$refs.form) {
+        const formHeight = this.$refs.form && this.$refs.form.clientHeight ? this.$refs.form.clientHeight : 60
+        const bottomOffset = formHeight + 8
+        return {
+          position: 'fixed',
+          left: '0',
+          right: '0',
+          bottom: bottomOffset + 'px',
+          zIndex: 20
+        }
+      }
+      return {}
+    }
+  },
   data() {
     return {
       messages: [],
@@ -125,10 +144,18 @@ export default {
       sessionId: Math.floor(Math.random() * 1000000),
       sending: false,
       hasAskedInitialQuestion: false,
-      isFirstTimeOpening: true
+      isFirstTimeOpening: true,
+      isMobile: false
     }
   },
   methods: {
+    getBottomSpacer() {
+      const formHeight = this.$refs && this.$refs.form && this.$refs.form.clientHeight ? this.$refs.form.clientHeight : 0
+      const bannerHeight = this.isMobile && this.$refs && this.$refs.banner && this.$refs.banner.clientHeight
+        ? this.$refs.banner.clientHeight + 12
+        : 10
+      return formHeight + bannerHeight
+    },
     loadMessages() {
       try {
         const savedMessages = sessionStorage.getItem('chatMessages')
@@ -250,8 +277,13 @@ export default {
       }
     },
     closeChat() {
-      // Emit close event to parent component
-      this.$emit('close')
+      // Directly close chat via store so mobile arrow works
+      this.$store.dispatch('chat/closeChat')
+    },
+    handleResize() {
+      if (process.client) {
+        this.isMobile = window.innerWidth < 768
+      }
     },
     isEmoji(value, max = 3) {
       if (typeof value !== 'string') {
@@ -351,6 +383,9 @@ export default {
     console.log('ChatN8N component mounted')
     // Load messages on mount but don't send initial question yet
     this.loadMessages()
+    // initialize mobile flag and listen for resizes
+    this.handleResize()
+    window.addEventListener('resize', this.handleResize)
     
     // Add event listener to clear data when page is being unloaded
     window.addEventListener('beforeunload', this.clearSessionData)
@@ -359,6 +394,7 @@ export default {
   beforeDestroy() {
     // Remove event listener and clear session data when component is destroyed
     window.removeEventListener('beforeunload', this.clearSessionData)
+    window.removeEventListener('resize', this.handleResize)
     this.clearSessionData()
   }
 }
@@ -460,5 +496,13 @@ export default {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Ensure fixed banner sits above the input on mobile */
+.ai-banner-fixed {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 20;
 }
 </style>
