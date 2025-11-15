@@ -35,15 +35,15 @@ export default {
       links: [
         {
           icon: ['fab', 'twitter'],
-          url: 'https://twitter.com/undervane'
+          url: 'https://twitter.com/eypigu'
         },
         {
           icon: ['fab', 'linkedin'],
-          url: 'https://www.linkedin.com/in/mipigu/'
+          url: 'https://www.linkedin.com/in/eypigu/'
         },
         {
           icon: ['fab', 'github'],
-          url: 'https://github.com/undervane'
+          url: 'https://github.com/eypigu'
         },
         {
           icon: 'envelope',
